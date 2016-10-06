@@ -1,0 +1,30 @@
+Package: NanoporeStateFinder
+Type: Package
+Title: A package for nanopore trace analysis
+Version: 0.1.0
+Author: Carlos de Lannoy
+Maintainer: Carlos de Lannoy <cvdelannoy@gmail.com>
+Description:Analyze nanopore recordings directly from abf-files. Allows filtering of white noise from the data and
+    automated recognition of events (i.e. uninterrupted periods during which current remains in a certain state)
+    using hidden markov models. Lastly, provides plotting functions for abfData objects, allowing insight in
+    dwell times, and current levels during events. The provided R Shiny visual User Interface may provide improved
+    ease of use to both novices and more experienced R-users.
+    Developed at and for the Maglia lab of Groningen University, The Netherlands.
+Note:
+    This package is in an early state of development. Use with caution.
+    Build mainly around the Hidden Markov Models provided by the DepmixS4-package.
+    Future additions will include:
+    - Examples for the application of all methods
+    - The option to set a lower limit for state duration
+    - Loading previously determined HMM parameters
+License: GPL-3
+LazyData: TRUE
+RoxygenNote: 5.0.1
+Imports: 
+    abf2,
+    depmixS4,
+    ggplot2,
+    grid,
+    methods,
+    shiny,
+    signal
