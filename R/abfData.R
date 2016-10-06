@@ -51,8 +51,14 @@ setClass(
 #' @importFrom methods new
 #' @export
 newAbfData = function(fileName, samplingFrequency){
-  return(new(Class="AbfData",fileName=fileName, samplingFrequency=samplingFrequency))
+  new(Class="AbfData",fileName=fileName, samplingFrequency=samplingFrequency)
 }
+
+
+# Generic function caused issues: data would not load. Still don't know why. Works fine without.
+# setGeneric(name="initialize", def = function(.Object, fileName, samplingFrequency){standardGeneric("initialize")},
+#            simpleInheritanceOnly = T)
+
 
 #' Initialize AbfData object
 #'
@@ -68,12 +74,7 @@ newAbfData = function(fileName, samplingFrequency){
 #'
 #' @docType methods
 #' @rdname initialize-methods
-setGeneric(name="initialize", def = function(.Object, fileName, samplingFrequency){standardGeneric("initialize")},
-           simpleInheritanceOnly = T)
-
-#' @rdname initialize-methods
-#' @aliases initialize,character,character,numeric-method
-
+#' @aliases initialize,AbfData,character,numeric-method
 setMethod(
   f="initialize",
   signature="AbfData",
@@ -615,12 +616,10 @@ detectBlockedStatesFun = function(abfData, states, splitState, manualParams, dtm
 
 #' @rdname detectBlockedStates-methods
 #' @aliases detectBlockedStates,AbfData,numeric-method
-
 setMethod(f="detectBlockedStates", signature = c(abfData = "AbfData",splitState="numeric"),
           definition = detectBlockedStatesFun)
 #' @rdname detectBlockedStates-methods
 #' @aliases detectBlockedStates,AbfData-method
-
 setMethod(f="detectBlockedStates", signature = c(abfData = "AbfData"),
           definition = detectBlockedStatesFun2)
 
@@ -802,7 +801,6 @@ scatterHeatFun = function(abfData){
 
 #' @rdname scatterHeat-methods
 #' @aliases scatterHeat,AbfData-method
-
 setMethod(f="scatterHeat", signature = c(abfData = "AbfData"),
           definition = scatterHeatFun)
 
