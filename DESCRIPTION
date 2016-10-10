@@ -26,5 +26,6 @@ Imports:
     ggplot2,
     grid,
     methods,
+    plotly,
     shiny,
     signal
