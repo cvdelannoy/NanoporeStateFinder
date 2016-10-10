@@ -6,9 +6,10 @@
 \alias{applyFilter,AbfData,character-method}
 \title{Apply filter}
 \usage{
-applyFilter(abfData, filterType, cutOff, w, n, bandwidth, state)
+applyFilter(abfData, filterType, cutOff, w, n, bandwidth)
 
-\S4method{applyFilter}{AbfData,character}(abfData, filterType)
+\S4method{applyFilter}{AbfData,character}(abfData, filterType, cutOff, w, n,
+  bandwidth)
 }
 \arguments{
 \item{abfData}{Object of AbfData type, containing data that is to be filtered}
@@ -23,8 +24,6 @@ Accepted filter types: "fft" (fast fourier transform), "lowPass" (low pass Gauss
 \item{n}{Required for lowPass-filter. Determines number of coefficients}
 
 \item{bandwidth}{Required for boxKernel-filter. Determine bandwidth used for moving average (greater = smoother)}
-
-\item{state}{Optionally, specific state at which filtering should take place}
 }
 \value{
 AbfData-object in which  the column current.filtered, containing filtered current values is added to longData and filter slot is filled with name of used filter, but which in all other ways is identical to the given abfData object.

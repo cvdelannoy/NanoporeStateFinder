@@ -1,13 +1,13 @@
+# # Install required packages
+# listOfPackages <- c("abf2", "depmixS4","ggplot2","grid", "shiny", "signal")
+# newPackages <- listOfPackages[!(listOfPackages %in% installed.packages()[,"Package"])]
+# if(length(newPackages)) install.packages(newPackages)
+
 # library(shiny)
 # library(ggplot2)
 # library(abf2)
 # library(plotly)
 # library(depmixS4)
-
-# # Install required packages
-# listOfPackages <- c("abf2", "depmixS4","ggplot2","grid", "shiny", "signal")
-# newPackages <- listOfPackages[!(listOfPackages %in% installed.packages()[,"Package"])]
-# if(length(newPackages)) install.packages(newPackages)
 
 # source("D:/Google Drive/FIG Free Internship Groningen/FIG data/abfData_05092016.R")
 options(shiny.maxRequestSize=100*1024^2)
@@ -24,9 +24,9 @@ shinyServer(function(input, output, session) {
   # Restrict axes
   abfRestricted = reactive({
     if(is.null(abfNew())){return()}
-    
+
     abf = abfNew()
-    
+
 
     if(input$triggerRestrict != 0)
       abf = triggerRestrictFun()
@@ -36,14 +36,14 @@ shinyServer(function(input, output, session) {
 
     updateSliderInput(session, "horSlider", min = plotExtremes[1], max = plotExtremes[2], value = plotExtremes[1:2])
     updateSliderInput(session, "vertSlider", min = plotExtremes[3],max = plotExtremes[4],value = plotExtremes[3:4])
-    
+
     return(abf)
   })
 
   # Apply filter (optional)
   abfFiltered = reactive({
     if(is.null(abfRestricted())){return()}
-    
+
     if(input$triggerFilter==0)
       abf = abfRestricted()
     else{
@@ -63,38 +63,47 @@ shinyServer(function(input, output, session) {
     else{
       abf = hmm1TriggerFun()
       # Update params
-      params = unlist(unname(getpars(abf@model1)))
+      params = unlist(unname(depmixS4::getpars(abf@model1)))
       for(i in 3:10){
-        parName = paste("h1v",i,sep="")
-        updateTextInput(session,parName,value=params[i])
+        parName = paste0("h1v",i)
+        updateNumericInput(session,parName,value=params[i])
       }
     }
-    
+
     return(abf)
   })
-  
+
   abfHmm2 = reactive({
     if(is.null(abfHmm1())){return()}
-    
+
     if(input$triggerHmm2==0)
       abf = abfHmm1()
-    else
+    else{
       abf = hmm2TriggerFun()
-    
+      params = unlist(unname(depmixS4::getpars(abf@model2)))
+      ns = input$nStates
+      np = ns^2+2*ns+ns
+      for(i in (ns+1):np){
+        parName = paste0("h2n",input$nStates,"v",i)
+        updateNumericInput(session,parName,value=params[i])
+      }
+    }
     return(abf)
   })
 
   drawMainPlot = reactive({
     if(is.null(abfHmm2())){return()}
+    if(input$traceSelect!="current")
+      updateCheckboxInput(session,"toggleGuides",value=F)
     return(plot(abfHmm2(),input$traceSelect))
   })
-  
+
   output$plotScatterheat = renderPlotly({
     if(is.null(abfHmm2())){return()}
     gg = scatterHeat(abfHmm2())
     ggplotly(gg)
   })
-  
+
   output$plotHist = renderPlot({
     if(is.null(abfHmm2())){return()}
     abf = abfHmm2()
@@ -113,34 +122,53 @@ shinyServer(function(input, output, session) {
     return(hist(abfHmm2(),bwDuration = input$bwTime, bwCurrent = input$bwCurrent,
                 rangeDuration = input$rangeTime, rangeCurrent = input$rangeCurrent))
   })
-  
+
 
   output$plotTrace = renderPlotly({
     if(is.null(drawMainPlot())){return()}
     gg = drawMainPlot()
       if (input$toggleGuides==T){
-      gg = gg + geom_hline(yintercept = input$vertSlider[1], colour = "red") + 
+      gg = gg + geom_hline(yintercept = input$vertSlider[1], colour = "red") +
                 geom_hline(yintercept = input$vertSlider[2], colour = "red") +
-                geom_vline(xintercept = input$horSlider[1], colour = "red") + 
+                geom_vline(xintercept = input$horSlider[1], colour = "red") +
                 geom_vline(xintercept = input$horSlider[2], colour = "red")
-    
-    
+
       # Add guides for HMM1 if applicable
       if(input$toggleHmm1== T & !any(is.na(c(input$h1v7,input$h1v8,input$h1v9,input$h1v10)))){
         gg = gg + geom_hline(yintercept = input$h1v7, colour = "#2ca25f") +
           geom_hline(yintercept = input$h1v7-2*input$h1v8, colour = "#99d8c9") +
           geom_hline(yintercept = input$h1v7+2*input$h1v8, colour = "#99d8c9")
-        
+
         gg = gg + geom_hline(yintercept = input$h1v9, colour = "#3182bd") +
           geom_hline(yintercept = input$h1v9-2*input$h1v10, colour = "#9ecae1") +
           geom_hline(yintercept = input$h1v9+2*input$h1v10, colour = "#9ecae1")
       }
+      }
+
+    if(input$toggleHmm2== T){
+      ns = input$nStates
+      i = 1
+      while(i < ns*2){
+        ic = paste0("h2n",ns,"v",ns+ns^2+i)
+        ic = input[[ic]]
+        i=i+1
+        sd = paste0("h2n",ns,"v",ns+ns^2+i)
+        sd = input[[sd]]
+        i=i+1
+
+        gg = gg + geom_hline(yintercept = ic, colour = "#2ca25f") +
+          geom_hline(yintercept = ic-sd*2, colour = "#99d8c9") +
+          geom_hline(yintercept = ic+sd*2, colour = "#99d8c9")
+      }
     }
+
+    # For now, remove legend as it does not display correctly
+    gg = gg + theme(legend.position="none")
     ggplotly(gg)
   })
-  
-  
-  
+
+
+
   # TRIGGERS ---------------------------------------------------------------
   changeFrequencyTrigger = eventReactive(input$frequencyInputTrigger,{
     input$frequencyInput
@@ -148,11 +176,11 @@ shinyServer(function(input, output, session) {
 
   triggerRestrictFun = eventReactive(input$triggerRestrict,{
     abf = abfNew()
-    abf = restrictAxesFun(abf, "current", minCurrent = input$vertSlider[1], maxCurrent = input$vertSlider[2],
+    abf = restrictAxes(abf, "current", minCurrent = input$vertSlider[1], maxCurrent = input$vertSlider[2],
                                           minTime = input$horSlider[1], maxTime = input$horSlider[2])
     return(abf)
   })
-  
+
   triggerFilterFun = eventReactive(input$triggerFilter,{
     abf = abfRestricted()
     if(input$selectFilter == 2)
@@ -161,13 +189,13 @@ shinyServer(function(input, output, session) {
       abf = applyFilter(abf, "boxKernel", input$boxBandwidth)
     else if(input$selectFilter == 4)
       abf = applyFilter(abf, "lowPass", input$lowPassW, input$lowPassN)
-    
+
     return(abf)
   })
-  
+
   hmm1TriggerFun = eventReactive(input$triggerHmm1,{
     abf = abfFiltered()
-    
+
     if(input$toggleHmm1==F)
       abf = detectOpenState(abf, IresMethod= input$iresMethod, autoTrash = input$autoTrash1)
     else{
@@ -176,18 +204,30 @@ shinyServer(function(input, output, session) {
         if(input[[paste("h1c",i,sep="")]]==T)
           params[i] = input[[paste0("h1v",i)]]
       }
-      params = as.numeric(params)
-      abf = detectOpenState(abf, IresMethod= input$iresMethod, autoTrash = input$autoTrash1, 
+      abf = detectOpenState(abf, IresMethod= input$iresMethod, autoTrash = input$autoTrash1,
                             manualParams = params)
     }
     return(abf)
   })
-  
+
   hmm2TriggerFun = eventReactive(input$triggerHmm2,{
     abf = abfHmm1()
-    abf = detectBlockedStates(abf,states=input$nStates)
-    
+
+    if(input$toggleHmm2==F)
+      abf = detectBlockedStates(abf,states=input$nStates)
+    else{
+      ns = input$nStates
+      np = ns^2+2*ns+ns
+      params = rep(NA,np)
+      for (i in (ns+1):np){
+        if(input[[paste0("h2n",ns,"c",i)]]==T)
+          params[i] = input[[paste0("h2n",ns,"v",i)]]
+      }
+      abf = detectBlockedStates(abf, autoTrash = input$autoTrash2,
+                                manualParams = params, states = input$nStates)
+    }
+
     return(abf)
   })
-                            
+
 })

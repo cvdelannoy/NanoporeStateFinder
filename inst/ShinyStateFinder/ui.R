@@ -6,8 +6,8 @@ library(plotly)
 js<-"$(function() {
       var $elie = $(document.getElementsByClassName('form-group shiny-input-container'));
 rotate(270);
-function rotate(degree) {        
-$elie.css({ WebkitTransform: 'rotate(' + degree + 'deg)'});  
+function rotate(degree) {
+$elie.css({ WebkitTransform: 'rotate(' + degree + 'deg)'});
 $elie.css({ '-moz-transform': 'rotate(' + degree + 'deg)'});
 }
 });"
@@ -42,22 +42,22 @@ shinyUI(fluidPage(
                             font-size: 75%;
                             }
                             "))),
-  column(2,
+  column(3,
          h3("Nanopore State Finder"),
-         h6("(c) Carlos de Lannoy, 2016"),
+         h6("By: Carlos de Lannoy, v: 0.1.0"),
          wellPanel(
            fileInput("abf",label="",multiple=F),
            fluidRow(
              h6("Sampling frequency"),
-            column(8,numericInput("frequencyInput", label = NULL, 
+            column(8,numericInput("frequencyInput", label = NULL,
                         value = 30)),
             column(1,actionButton("frequencyInputTrigger","adjust"))
            ),
            hr(),
            # FILTER --------------------------------------------------------------
            h4("Filtering"),
-           selectInput("selectFilter", label = "", 
-                       choices = list("no filter" = 1, 
+           selectInput("selectFilter", label = "",
+                       choices = list("no filter" = 1,
                                       "FFT filter" = 2,
                                       "box kernel filter" = 3,
                                       "low pass filter(Gauss.)" = 4), selected = 1),
@@ -80,8 +80,8 @@ shinyUI(fluidPage(
            # HMM1 ------------------------------------------------------------------
            h4("Detect open state"),
            checkboxInput("autoTrash1", label = "Auto-trash", value = F),
-           selectInput("iresMethod", label = "Ires calculation", 
-                       choices = list("per open state" = "perEvent", 
+           selectInput("iresMethod", label = "Ires calculation",
+                       choices = list("per open state" = "perEvent",
                                       "periodically (10 min.)" = "periodically",
                                       "overall" = "overall")),
            fluidRow(
@@ -110,12 +110,12 @@ shinyUI(fluidPage(
                               ),
                             fluidRow(
                               column(4,numericInput("h1v3",value=NA,label=NULL),
-                                     numericInput("h1v4",value=NA,label=NULL)),
-                              column(4,numericInput("h1v5",value=NA,label=NULL),
+                                     numericInput("h1v5",value=NA,label=NULL)),
+                              column(4,numericInput("h1v4",value=NA,label=NULL),
                                      numericInput("h1v6",value=NA,label=NULL)),
                               column(1,checkboxInput("h1c3",value=T,label=NULL),
-                                     checkboxInput("h1c4",value=T,label=NULL)),
-                              column(1,checkboxInput("h1c5",value=T,label=NULL),
+                                     checkboxInput("h1c5",value=T,label=NULL)),
+                              column(1,checkboxInput("h1c4",value=T,label=NULL),
                                      checkboxInput("h1c6",value=T,label=NULL))
                             )
            ),
@@ -124,7 +124,7 @@ shinyUI(fluidPage(
            h4("Detect blocked states"),
            fluidRow(
              column(4,checkboxInput("autoTrash2", label = "Auto-trash", value = F)),
-             column(4,h6("# of states:")),
+             column(2,h6("# of states:")),
              column(4,numericInput("nStates",label=NULL,value="0"))
            ),
            fluidRow(
@@ -140,35 +140,74 @@ shinyUI(fluidPage(
                             ),
                             conditionalPanel("input.nStates==2",
                               fluidRow(
-                                column(4,textInput("h2v7",value=NA, label=NULL),
-                                       textInput("h2v9",value=NA,label=NULL)),
-                                column(4,textInput("h2v8",value=NA,label=NULL),
-                                       textInput("h2v10",value=NA,label=NULL)),
-                                column(1,checkboxInput("h2c7",value=T,label=NULL),
-                                       checkboxInput("h2c9",value=T,label=NULL)),
-                                column(1,checkboxInput("h2c8",value=T,label=NULL),
-                                       checkboxInput("h2c10",value=T,label=NULL))
+                                column(4,numericInput("h2n2v7",value=NA, label=NULL),
+                                       numericInput("h2n2v9",value=NA,label=NULL)),
+                                column(4,numericInput("h2n2v8",value=NA,label=NULL),
+                                       numericInput("h2n2v10",value=NA,label=NULL)),
+                                column(1,checkboxInput("h2n2c7",value=T,label=NULL),
+                                       checkboxInput("h2n2c9",value=T,label=NULL)),
+                                column(1,checkboxInput("h2n2c8",value=T,label=NULL),
+                                       checkboxInput("h2n2c10",value=T,label=NULL))
                               ),
                               fluidRow(
                                 column(8,h6("Transition matrix"))
                               ),
                               fluidRow(
-                                column(4,textInput("h2v3",value=NA, label=NULL),
-                                       textInput("h2v4",value=NA,label=NULL)),
-                                column(4,textInput("h2v5",value=NA,label=NULL),
-                                       textInput("h2v6",value=NA,label=NULL)),
-                                column(1,checkboxInput("h2c3",value=T,label=NULL),
-                                       checkboxInput("h2c4",value=T,label=NULL)),
-                                column(1,checkboxInput("h2c5",value=T,label=NULL),
-                                       checkboxInput("h2c6",value=T,label=NULL))
+                                column(4,numericInput("h2n2v3",value=NA, label=NULL),
+                                       numericInput("h2n2v5",value=NA,label=NULL)),
+                                column(4,numericInput("h2n2v4",value=NA,label=NULL),
+                                       numericInput("h2n2v6",value=NA,label=NULL)),
+                                column(1,checkboxInput("h2n2c3",value=T,label=NULL),
+                                       checkboxInput("h2n2c5",value=T,label=NULL)),
+                                column(1,checkboxInput("h2n2c4",value=T,label=NULL),
+                                       checkboxInput("h2n2c6",value=T,label=NULL))
                               )
+                            ),
+                            conditionalPanel("input.nStates==3",
+                                             fluidRow(
+                                               column(4,numericInput("h2n3v13",value=NA, label=NULL),
+                                                      numericInput("h2n3v15",value=NA, label=NULL),
+                                                      numericInput("h2n3v17",value=NA,label=NULL)),
+                                               column(4,numericInput("h2n3v14",value=NA,label=NULL),
+                                                      numericInput("h2n3v16",value=NA,label=NULL),
+                                                      numericInput("h2n3v18",value=NA,label=NULL)),
+                                               column(1,checkboxInput("h2n3c13",value=T,label=NULL),
+                                                      checkboxInput("h2n3c15",value=T,label=NULL),
+                                                      checkboxInput("h2n3c17",value=T,label=NULL)),
+                                               column(1,checkboxInput("h2n3c14",value=T,label=NULL),
+                                                      checkboxInput("h2n3c16",value=T,label=NULL),
+                                                      checkboxInput("h2n3c18",value=T,label=NULL))
+                                             ),
+                                             fluidRow(
+                                               column(8,h6("Transition matrix"))
+                                             ),
+                                             fluidRow(
+                                               column(3,numericInput("h2n3v4",value=NA, label=NULL),
+                                                      numericInput("h2n3v7",value=NA, label=NULL),
+                                                      numericInput("h2n3v10",value=NA,label=NULL)),
+                                               column(3,numericInput("h2n3v5",value=NA,label=NULL),
+                                                      numericInput("h2n3v8",value=NA,label=NULL),
+                                                      numericInput("h2n3v11",value=NA,label=NULL)),
+                                               column(3,numericInput("h2n3v6",value=NA,label=NULL),
+                                                      numericInput("h2n3v9",value=NA,label=NULL),
+                                                      numericInput("h2n3v12",value=NA,label=NULL)),
+                                               column(1,checkboxInput("h2n3c4",value=T,label=NULL),
+                                                      checkboxInput("h2n3c7",value=T,label=NULL),
+                                                      checkboxInput("h2n3c10",value=T,label=NULL)),
+                                               column(1,checkboxInput("h2n3c5",value=T,label=NULL),
+                                                      checkboxInput("h2n3c8",value=T,label=NULL),
+                                                      checkboxInput("h2n3c11",value=T,label=NULL)),
+                                               column(1,checkboxInput("h2n3c6",value=T,label=NULL),
+                                                      checkboxInput("h2n3c9",value=T,label=NULL),
+                                                      checkboxInput("h2n3c12",value=T,label=NULL))
+                                             )
                             )
            ),
            hr(),
            style = "overflow-y:scroll; max-height: 900px")
   ),
   # PLOT-RELATED ---------------------------------------------------------------
-  column(10,
+  column(9,
          tabsetPanel(
            tabPanel("trace", selectInput("traceSelect", label = NULL, choices = list("current" = "current",
                                                                                      "filtered" = "current.filtered",

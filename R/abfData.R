@@ -165,7 +165,6 @@ setMethod(f="restrictAxes", signature=c(abfData="AbfData"),
 #' @param w Required for lowPass-filter. Determine  reciprocal of std.dev (so larger is wider window)
 #' @param n Required for lowPass-filter. Determines number of coefficients
 #' @param bandwidth Required for boxKernel-filter. Determine bandwidth used for moving average (greater = smoother)
-#' @param state Optionally, specific state at which filtering should take place
 #'
 #' @return AbfData-object in which  the column current.filtered, containing filtered current values is added to longData and filter slot is filled with name of used filter, but which in all other ways is identical to the given abfData object.
 #'
@@ -174,16 +173,13 @@ setMethod(f="restrictAxes", signature=c(abfData="AbfData"),
 #'
 #' @docType methods
 #' @rdname applyFilter-methods
-setGeneric(name="applyFilter", def=function(abfData, filterType, cutOff, w, n, bandwidth, state){standardGeneric("applyFilter")})
+setGeneric(name="applyFilter", def=function(abfData, filterType, cutOff, w, n, bandwidth){standardGeneric("applyFilter")})
 
 # Filter white noise from the data, using the given filter type.
-applyFilterFun = function(abfData, filterType){
-  if(!missing(state)){
-    currentVector = abfData@longData$current[!is.na(abfData@longData$state) & abfData@longData$state==state]
-  } else{
-    currentVector = abfData@longData$current[!is.na(abfData@longData$current)]
-    abfData@longData["current.standardized"] = scale(abfData@longData$current)
-  }
+applyFilterFun = function(abfData, filterType,cutOff, w, n, bandwidth){
+
+  currentVector = abfData@longData$current[!is.na(abfData@longData$current)]
+
 
   if(filterType=="fft" & exists("cutOff"))
     currentVectorFiltered = fftFilterFun(currentVector, cutOff)
@@ -193,15 +189,12 @@ applyFilterFun = function(abfData, filterType){
     currentVectorFiltered = lowPassFilterFun(currentVector, bandwidth)
   else{
     warning("Arguments missing, no filter applied")
-    return(currentVector)
+    return(abfData)
   }
 
-  if(!missing(state))
-    abfData@longData$current.filtered[!is.na(abfData@longData$state) & abfData@longData$state==state] = currentVectorFiltered
-  else{
-    abfData@longData["current.filtered"] = NA
-    abfData@longData$current.filtered[!is.na(abfData@longData$current)]= currentVectorFiltered
-  }
+  abfData@longData["current.filtered"] = NA
+  abfData@longData$current.filtered[!is.na(abfData@longData$current)]= currentVectorFiltered
+
   return(abfData)
 }
 
@@ -737,7 +730,9 @@ setMethod(f="plot",signature="AbfData",
   # plot any desired combination of current graphs
   if(any(y=="current")){
     height = mean(x@longData$current, na.rm=T)
-    ggData = ggData + geom_line(aes(y=current),data=x@longData, na.rm=T)
+    ggData = ggData + geom_line(aes(y=current),data=x@longData, na.rm=T) +
+      coord_cartesian(ylim=c(min(x@longData$current),max(x@longData$current))) +
+      ylab("current (pA)")
   }
   if(any(y=="current.standardized")){
     height = mean(x@longData$current.standardized, na.rm=T)
@@ -745,26 +740,34 @@ setMethod(f="plot",signature="AbfData",
   }
   if(any(y=="current.filtered")){
     height = mean(x@longData$current.filtered, na.rm=T)
-    ggData = ggData + geom_line(aes(y=current.filtered),data=x@longData, na.rm=T)
+    ggData = ggData + geom_line(aes(y=current.filtered),data=x@longData, na.rm=T) +
+      ylab("current (pA)")
   }
   if(any(y=="current.res")){
     height = mean(x@longData$current.res, na.rm=T)
-    ggData = ggData + geom_line(aes(y=current.res),data=x@longData, na.rm=T)
+    ggData = ggData + geom_line(aes(y=current.res),data=x@longData, na.rm=T)+
+      coord_cartesian(ylim=c(min(x@longData$current.res),max(x@longData$current.res))) +
+      ylab("Ires")
   }
   if(any(y=="current.resFiltered")){
     height = mean(x@longData$current.resFiltered, na.rm=T)
-    ggData = ggData + geom_line(aes(y=current.resFiltered),data=x@longData, na.rm=T)
+    ggData = ggData + geom_line(aes(y=current.resFiltered),data=x@longData, na.rm=T) +
+      ylab("Ires")
   }
 
+  ggData = ggData + xlab("time (s)")
+
   tr = range(x@longData$time[!is.na(x@longData$current)], na.rm=T)
-  # ggData = ggData + coord_cartesian(xlim = c(tr[1],tr[2]))
+  ggData = ggData + coord_cartesian(xlim = c(tr[1],tr[2]))
 
   # if state info exists, draw colorbar for states
   if(!is.null(x@wideData$state)){
     ggData = ggData + geom_segment(data=x@wideData,
                                    aes(x=start, xend=start+duration,
                                        y=height,yend=height, color=as.factor(state)),
-                                   alpha=0.5,size=25,na.rm=T)
+                                   alpha=0.5,size=25,na.rm=T, show.legend = NA) +
+                                   # guides(color = guide_legend(override.aes=list(shape=15,size=5)))
+                                  scale_shape_manual(values = 19) + scale_size_manual(values=7)
   }
   return(ggData)
 })
